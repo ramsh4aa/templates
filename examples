@@ -1,0 +1,481 @@
+#include <iostream>
+using namespace std;
+#include <string>
+//void display(string x) {
+//	cout << x << endl;
+//}
+//
+//void display(float x) {
+//	cout << x << endl;
+//}
+
+//instead of all this:
+
+template<typename T> //'class' or 'typename' //type is identified at rutime. 
+void display(T x) {
+	cout << x << endl;
+}
+
+int main() {
+	display(30);
+	display("hello");
+	display(3.2f);
+}
+
+
+
+
+
+//******************************************************************************************************************************************************************************
+
+
+
+#include <iostream>
+#include<fstream>
+using namespace std;
+
+
+void printArr(int* studId, double* grade, int size) {
+
+
+	cout << "Student ID " << "\tGrade" << endl;
+	for (int i = 0; i < size; i++) {
+		cout << *(studId + i) << "\t\t" << grade[i] << endl;
+	}
+}
+
+
+int menu()
+{
+	int option;
+	cout << "1. Enter new student\n2. View all students \n3. Save and Exit\nEnter option: ";
+	cin >> option;
+
+
+	return option;
+}
+
+
+
+
+
+
+void getNewInput(int& studId, double& grade)
+{
+	cout << "Enter id: ";
+	cin >> studId;
+	cout << "Enter grade: ";
+	cin >> grade;
+}
+
+
+void readFile(ifstream& ifile, int* studid, double* grade, int numstud)
+{
+	for (int i = 0; i < numstud; i++)
+	{
+		ifile >> studid[i] >> grade[i];
+	}
+}
+
+template<typename type>
+int* resizeArr(type* oldArr, int oldsize, int newsize)
+{
+	type* newArray = new type[newsize];
+	for (int i = 0; i < oldsize; i++)
+	{
+		newArray[i] = oldArr[i];
+	}
+
+
+	return newArray;
+}
+
+
+//double* resizeArr(double* oldArr, int oldsize, int newsize)
+//{
+//	double* newArray = new double[newsize];
+//	for (int i = 0; i < oldsize; i++)
+//	{
+//		newArray[i] = oldArr[i];
+//	}
+//
+//
+//	return newArray;
+//}
+
+
+void save(int* studid, double* grade, int numstud)
+{
+	ofstream ofile("data.txt");
+
+
+	ofile << numstud << endl;
+	for (int s = 0; s < numstud; s++)
+	{
+		ofile << studid[s] << "\t" << grade[s] << endl;
+	}
+	ofile.close();
+}
+int main() {
+
+
+	int numstud;
+	ifstream infile("data.txt");
+
+
+	if (infile.fail())
+	{
+		cout << "Failed openning the file" << endl;
+		exit(1);
+	}
+
+
+	infile >> numstud;
+
+
+	int* studid = new int[numstud];
+	double* grade = new double[numstud];
+
+
+	readFile(infile, studid, grade, numstud);
+
+
+
+
+	int option;
+
+
+	int* studidtemp;
+	double* studgradetemp;
+	int newstud, newsize = numstud;
+	do
+	{
+		option = menu();
+
+
+		switch (option)
+		{
+		case 1:
+			cout << "How many students to add: ";
+			cin >> newstud;
+			newsize = newsize + newstud;
+
+
+			studidtemp = resizeArr(studid, numstud, newsize);
+			delete[]studid;
+			studid = studidtemp;
+
+
+			studgradetemp = resizeArr(grade, numstud, newsize);
+			delete[]grade;
+			grade = studgradetemp;
+			for (int s = numstud; s < newsize; s++)
+			{
+				//call getNewInput
+				getNewInput(studid[s], grade[s]);
+
+
+			}
+			break;
+
+
+		case 2:
+			printArr(studid, grade, newsize);
+
+
+			break;
+
+
+		case 3:
+			save(studid, grade, newsize);
+			break;
+
+
+		default:
+			cout << "Invalid option" << endl;
+		}
+	} while (option != 3);
+
+
+
+
+	delete[]studid;
+	delete[]grade;
+	return 0;
+}
+
+
+
+
+//***********************************************GENERIC****************************************************************************************************************************************
+
+
+
+#include <iostream>
+#include <cstdlib>
+using namespace std;
+
+//here genericlist onky accepts integer values, cant take anything in main like gernericlist slist; slist.add("hello"); LETS MAAKE THIS NON GENERIC. ITS IN THE CODE AFTER THIS..
+class GenericList
+{
+private:
+	int* item; //pointer to the dynamic array that holds the list.
+	int max_length; //max number of items allowed on the list.
+	int current_length; //number of items currently on the list.
+public:
+	GenericList(int max);
+	//Initializes the object to an empty list that can hold up to
+	//max items of type ItemType.
+	~GenericList();
+	//Returns all the dynamic memory used by the object to the freestore.
+
+	int length();
+	//Returns the number of items on the list.
+
+	void add(int new_item);
+	//Precondition: The list is not full.
+	//Postcondition: The new_item has been added to the list.
+
+	bool full();
+	//Returns true if the list is full.
+
+
+	void erase();
+	//Removes all items from the list so that the list is empty.
+
+	//friend ostream& operator <<(ostream& outs,const GenericList<ItemType>& the_list);
+
+	friend ostream& operator <<(ostream& outs, const GenericList& the_list)
+	{
+		for (int i = 0; i < the_list.current_length; i++)
+			outs << the_list.item[i] << endl;
+
+		return outs;
+	}
+	//Overloads the << operator so it can be used to output the
+	//contents of the list. The items are output one per line.
+	//Precondition: If outs is a file output stream, then outs has 
+	//already been connected to a file
+};
+
+
+GenericList::GenericList(int max) : max_length(max), current_length(0) //shortcut to making non default together. 
+{
+	item = new int[max];
+}
+
+
+GenericList::~GenericList()
+{
+	delete[] item;
+}
+
+
+int GenericList::length()
+{
+	return (current_length);
+}
+
+
+void GenericList::add(int new_item)
+{
+	if (full())
+	{
+		cout << "Error: adding to a full list.\n";
+		exit(1);
+	}
+	else
+	{
+		item[current_length] = new_item;
+		current_length = current_length + 1;
+	}
+}
+
+bool GenericList::full()
+{
+	return (current_length == max_length);
+}
+
+
+void GenericList::erase()
+{
+	current_length = 0;
+}
+
+
+int main()
+{
+
+	GenericList first_list(2);
+	first_list.add(1);
+	first_list.add(2);
+
+	cout << "first_list = \n" << first_list;
+
+
+	system("pause");
+	return 0;
+}
+
+
+
+
+
+//********************************************NON-GENERIC***************************************************//
+
+
+
+
+
+#include <iostream>
+#include <cstdlib>
+using namespace std;
+
+
+
+template <typename T>
+class GenericList
+{
+private:
+	T* item; 
+	int max_length; 
+	int current_length;
+public:
+	GenericList<T>(const GenericList<T>& other); //copy constructor.
+	GenericList<T>& operator=(const GenericList<T>& other);//equal operator.
+
+	GenericList(int max);
+	
+	~GenericList();
+	
+	int length();
+	
+
+	void add(T new_item);
+	
+
+	bool full();
+
+
+
+	void erase();
+	
+
+	friend ostream& operator <<(ostream& outs, const GenericList<T>& the_list)
+	{
+		for (int i = 0; i < the_list.current_length; i++)
+			outs << the_list.item[i] << endl;
+
+		return outs;
+	}
+	
+};
+
+
+template <class T>
+GenericList<T>& GenericList<T>:: operator=(const GenericList<T>& other) {  //return type followed by the class
+	if (this != &other) {
+		max_length = other.max_length;
+		current_length = other.current_length;
+		delete[] item;
+		item = new T(max_length);
+		for (i = 0; i < current_length; i++) {
+			item[i] = other.item[i];
+		}
+
+	}
+
+	return *this;
+}
+
+
+template <class T>
+GenericList<T>::GenericList<T>(const GenericList<T>& other) {
+	max_length = other.max_length;
+	current_length = other.current_length;
+	item = new T(max_length);
+	for (i = 0; i < current_length; i++) {
+		item[i] = other.item[i];
+	}
+}
+
+//ned to use template again since the previous one was only for the class.
+
+template <class T>
+//the genericlist class is a template class, therefore you ened to tell c++, genericlist isnt a normal class anymore, its a template class.
+GenericList<T>::GenericList(int max) : max_length(max), current_length(0) //shortcut to making non default together. 
+{
+	item = new T[max];
+}
+
+template<class T>
+GenericList<T>::~GenericList()
+{
+	delete[] item;
+}
+
+
+
+template <class T>
+int GenericList<T>::length()
+{
+	return (current_length);
+}
+
+
+
+template <class T>
+void GenericList<T>::add(T new_item)
+{
+	if (full())
+	{
+		cout << "Error: adding to a full list.\n";
+		exit(1);
+	}
+	else
+	{
+		item[current_length] = new_item;
+		current_length = current_length + 1;
+	}
+}
+
+
+template <class T>
+bool GenericList<T>::full()
+{
+	return (current_length == max_length);
+}
+
+
+
+
+template <class T>
+void GenericList<T>::erase()
+{
+	current_length = 0;
+}
+
+
+int main()
+{
+	//calling objects:
+	GenericList<int> first_list(2); //similar to vector . //NOW THE TEPLATE HAS BECOME INT. 
+	first_list.add(1);
+	first_list.add(2);
+	cout << "first_list = \n" << first_list << endl;
+
+
+
+	GenericList<string> strlist(2);  //NOW THE TEMPLATE HAS BEVOME STRING. YOU ONLY NEED TO CHANGE STUFF IN THE MAIN-->OPTIMIZATION. 
+	strlist.add("hi");
+	strlist.add("HELLO..");
+	cout << "str_list = \n" << strlist << endl;
+
+
+
+
+	system("pause");
+	return 0;
+}
+
+
